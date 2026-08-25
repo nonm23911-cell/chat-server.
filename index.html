@@ -2,38 +2,162 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تطبيق الدردشة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>دردشة عراقية متكاملة</title>
   <style>
-    body { font-family: sans-serif; background: #121212; color: white; display: flex; flex-direction: column; height: 100vh; margin: 0; }
-    #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-    .msg { background: #1e1e1e; padding: 10px 15px; border-radius: 8px; max-width: 80%; width: fit-content; }
-    .input-box { display: flex; padding: 10px; background: #1e1e1e; }
-    input { flex: 1; padding: 12px; border: none; border-radius: 5px; background: #2b2b2b; color: white; font-size: 16px; }
-    button { padding: 12px 20px; border: none; background: #007bff; color: white; font-size: 16px; border-radius: 5px; margin-right: 8px; cursor: pointer; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #0d1117; color: #e6edf3; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* الشريط العلوي للمتواجدين */
+    .online-bar { display: flex; background: #161b22; padding: 6px; gap: 10px; overflow-x: auto; border-bottom: 1px solid #30363d; }
+    .user-avatar-mini { position: relative; display: inline-block; }
+    .user-avatar-mini img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #30363d; object-fit: cover; }
+    .status-dot { position: absolute; bottom: 2px; left: 0; width: 10px; height: 10px; background: #238636; border-radius: 50%; border: 2px solid #161b22; }
+
+    /* منطقة الرسائل */
+    .chat-area { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #0d1117; }
+    .msg-card { display: flex; align-items: flex-start; gap: 10px; background: #161b22; padding: 8px; border-radius: 6px; border-right: 3px solid #238636; }
+    .msg-avatar { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; cursor: pointer; }
+    .msg-content { flex: 1; }
+    .msg-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #58a6ff; margin-bottom: 4px; }
+    .msg-text { font-size: 14px; color: #c9d1d9; }
+
+    /* النافذة المنبثقة (البروفايل) */
+    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .hidden { display: none !important; }
+    .profile-card { background: #161b22; width: 88%; max-width: 360px; border-radius: 8px; border: 1px solid #30363d; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .profile-img { width: 100%; height: 200px; object-fit: cover; }
+    .profile-body { padding: 15px; text-align: center; }
+    .profile-name { font-size: 18px; font-weight: bold; color: #fff; }
+    .profile-status { font-size: 12px; color: #238636; margin: 4px 0 10px; }
+    .profile-info { font-size: 13px; color: #8b949e; text-align: right; display: flex; flex-direction: column; gap: 6px; background: #0d1117; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
+    .profile-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .btn { padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    .btn-primary { background: #1f6feb; color: white; }
+    .btn-danger { background: #da3633; color: white; grid-column: span 2; }
+    .btn-close { background: #30363d; color: white; margin-top: 8px; width: 100%; }
+
+    /* شريط الكتابة */
+    .input-bar { display: flex; padding: 8px; background: #161b22; border-top: 1px solid #30363d; gap: 8px; }
+    .input-bar input { flex: 1; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: white; }
+    .btn-send { background: #238636; color: white; padding: 0 18px; border: none; border-radius: 6px; font-weight: bold; }
+
+    /* شريط التنقل السفلي */
+    .nav-bar { display: flex; justify-content: space-around; background: #010409; padding: 8px 0; border-top: 1px solid #30363d; font-size: 12px; color: #8b949e; }
+    .nav-item { text-align: center; cursor: pointer; }
+    .nav-item.active { color: #58a6ff; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <div id="chat"></div>
+  <!-- قائمة المتواجدين بالأعلى -->
+  <div class="online-bar">
+    <div class="user-avatar-mini" onclick="openProfile('الزعيم', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400')">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" />
+      <span class="status-dot"></span>
+    </div>
+    <div class="user-avatar-mini" onclick="openProfile('عمر', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400')">
+      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400" />
+      <span class="status-dot"></span>
+    </div>
+  </div>
 
-  <div class="input-box">
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." />
-    <button onclick="sendMessage()">إرسال</button>
+  <!-- ساحة المحادثات -->
+  <div class="chat-area" id="chatArea">
+    <div class="msg-card">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" class="msg-avatar" onclick="openProfile('الزعيم', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400')">
+      <div class="msg-content">
+        <div class="msg-header">
+          <span>الزعيم 🇮🇷</span>
+          <span style="color:#8b949e; font-size:11px;">03:45 م</span>
+        </div>
+        <div class="msg-text">أهلاً بكم في دردشة العراق العامة 🌹</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- كارت البروفايل المنبثق -->
+  <div class="modal-overlay hidden" id="profileModal">
+    <div class="profile-card">
+      <img src="" id="modalImg" class="profile-img">
+      <div class="profile-body">
+        <div class="profile-name" id="modalName">الاسم</div>
+        <div class="profile-status">● متصل الآن</div>
+        
+        <div class="profile-info">
+          <div>البلد: 🇮🇷 العراق</div>
+          <div>الرتبة: مشرف عام</div>
+          <div>الصلاحية: مفتوحة</div>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn btn-primary">محادثة خاصة 💬</button>
+          <button class="btn btn-primary">إرسال تنبيه 🔔</button>
+          <button class="btn btn-danger">تجاهل 🚫</button>
+        </div>
+        <button class="btn btn-close" onclick="closeProfile()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- شريط الكتابة -->
+  <div class="input-bar">
+    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." />
+    <button class="btn-send" onclick="sendMsg()">إرسال</button>
+  </div>
+
+  <!-- شريط التنقل السفلي -->
+  <div class="nav-bar">
+    <div class="nav-item">⚙️ الضبط</div>
+    <div class="nav-item active">💬 الحائط</div>
+    <div class="nav-item">👥 الغرف</div>
+    <div class="nav-item">📩 خاص</div>
+    <div class="nav-item">🟢 المتواجدون (440)</div>
   </div>
 
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <script>
-    const socket = io('https://chat-server-puce-psi.vercel.app');
+    const socket = io();
 
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('messageInput');
+    function openProfile(name, img) {
+      document.getElementById('modalName').textContent = name;
+      document.getElementById('modalImg').src = img;
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfile() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function sendMsg() {
+      const input = document.getElementById('msgInput');
+      const val = input.value.trim();
+      if(val) {
+        socket.emit('send_message', val);
+        input.value = '';
+      }
+    }
 
     socket.on('receive_message', (data) => {
+      const chatArea = document.getElementById('chatArea');
       const msgDiv = document.createElement('div');
-      msgDiv.className = 'msg';
-      msgDiv.textContent = data;
-      chat.appendChild(msgDiv);
+      msgDiv.className = 'msg-card';
+      msgDiv.innerHTML = `
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400" class="msg-avatar" onclick="openProfile('مستخدم', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400')">
+        <div class="msg-content">
+          <div class="msg-header">
+            <span>مستخدم</span>
+            <span style="color:#8b949e; font-size:11px;">الآن</span>
+          </div>
+          <div class="msg-text">${data}</div>
+        </div>
+      `;
+      chatArea.appendChild(msgDiv);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    });
+  </script>
+</body>
+</html>
       chat.scrollTop = chat.scrollHeight;
     });
 
