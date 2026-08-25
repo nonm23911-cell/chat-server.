@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تطبيق الدردشة</title>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: white; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+    #chat { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .msg { background: #1e1e1e; padding: 10px 15px; border-radius: 8px; max-width: 80%; width: fit-content; }
+    .input-box { display: flex; padding: 10px; background: #1e1e1e; }
+    input { flex: 1; padding: 12px; border: none; border-radius: 5px; background: #2b2b2b; color: white; font-size: 16px; }
+    button { padding: 12px 20px; border: none; background: #007bff; color: white; font-size: 16px; border-radius: 5px; margin-right: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div id="chat"></div>
+
+  <div class="input-box">
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." />
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
+
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script>
+    const socket = io('https://chat-server-puce-psi.vercel.app');
+
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('messageInput');
+
+    socket.on('receive_message', (data) => {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg';
+      msgDiv.textContent = data;
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
+    });
+
+    function sendMessage() {
+      const msg = input.value.trim();
+      if (msg) {
+        socket.emit('send_message', msg);
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>
